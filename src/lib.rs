@@ -4,13 +4,14 @@ extern crate wascc_codec as codec;
 #[macro_use]
 extern crate log;
 
+
 mod kv;
 
 use crate::kv::KeyValueStore;
 use codec::capabilities::{CapabilityProvider, Dispatcher, NullDispatcher};
 use codec::core::{OP_BIND_ACTOR, OP_REMOVE_ACTOR};
-use codec::keyvalue;
-use codec::keyvalue::*;
+use tea_codec::keyvalue;
+use tea_codec::keyvalue::*;
 use wascc_codec::core::CapabilityConfiguration;
 use wascc_codec::{deserialize, serialize};
 
