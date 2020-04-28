@@ -76,7 +76,7 @@ impl KeyvalueProvider {
         let store = self.store.read().unwrap();
         if !store.exists(&req.key)? {
             Ok(serialize(GetResponse {
-                value: String::from(""),
+                value: vec![],
                 exists: false,
             })?)
         } else {
@@ -89,7 +89,7 @@ impl KeyvalueProvider {
                 Err(e) => {
                     eprint!("GET for {} failed: {}", &req.key, e);
                     GetResponse {
-                        value: "".to_string(),
+                        value: vec![],
                         exists: false,
                     }
                 }
@@ -103,7 +103,7 @@ impl KeyvalueProvider {
 
     fn list_range(&self, _actor: &str, req: ListRangeRequest) -> Result<Vec<u8>, Box<dyn Error>> {
         let store = self.store.read().unwrap();
-        let result: Vec<String> = store.lrange(&req.key, req.start as _, req.stop as _)?;
+        let result: Vec<Vec<u8>> = store.lrange(&req.key, req.start as _, req.stop as _)?;
         Ok(serialize(ListRangeResponse { values: result })?)
     }
 
@@ -143,7 +143,7 @@ impl KeyvalueProvider {
 
     fn set_union(&self, _actor: &str, req: SetUnionRequest) -> Result<Vec<u8>, Box<dyn Error>> {
         let store = self.store.read().unwrap();
-        let result: Vec<String> = store.sunion(req.keys)?;
+        let result: Vec<Vec<u8>> = store.sunion(req.keys)?;
         Ok(serialize(SetQueryResponse { values: result })?)
     }
 
@@ -153,13 +153,13 @@ impl KeyvalueProvider {
         req: SetIntersectionRequest,
     ) -> Result<Vec<u8>, Box<dyn Error>> {
         let store = self.store.read().unwrap();
-        let result: Vec<String> = store.sinter(req.keys)?;
+        let result: Vec<Vec<u8>> = store.sinter(req.keys)?;
         Ok(serialize(SetQueryResponse { values: result })?)
     }
 
     fn set_query(&self, _actor: &str, req: SetQueryRequest) -> Result<Vec<u8>, Box<dyn Error>> {
         let store = self.store.read().unwrap();
-        let result: Vec<String> = store.smembers(req.key)?;
+        let result: Vec<Vec<u8>> = store.smembers(req.key)?;
         Ok(serialize(SetQueryResponse { values: result })?)
     }
 
@@ -167,7 +167,7 @@ impl KeyvalueProvider {
         let store = self.store.read().unwrap();
         let result: bool = store.exists(&req.key)?;
         Ok(serialize(GetResponse {
-            value: "".to_string(),
+            value: vec![],
             exists: result,
         })?)
     }

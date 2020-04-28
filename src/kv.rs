@@ -5,9 +5,9 @@ use std::result::Result;
 
 pub enum KeyValueItem {
     Atomic(i32),
-    Scalar(String),
-    List(Vec<String>),
-    Set(HashSet<String>),
+    Scalar(Vec<u8>),
+    List(Vec<Vec<u8>>),
+    Set(HashSet<Vec<u8>>),
 }
 
 pub struct KeyValueStore {
@@ -44,7 +44,7 @@ impl KeyValueStore {
         Ok(self.items.contains_key(key))
     }
 
-    pub fn get(&self, key: &str) -> Result<String, Box<dyn Error>> {
+    pub fn get(&self, key: &str) -> Result<Vec<u8>, Box<dyn Error>> {
         self.items.get(key).map_or_else(
             || Err("No such key".into()),
             |v| {
@@ -57,10 +57,10 @@ impl KeyValueStore {
         )
     }
 
-    pub fn lrange(&self, key: &str, start: i32, stop: i32) -> Result<Vec<String>, Box<dyn Error>> {
+    pub fn lrange(&self, key: &str, start: i32, stop: i32) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
         let start = start.max(0);
         self.items.get(key).map_or_else(
-            || Ok(vec![]),
+            || Ok(vec![vec![]]),
             |v| {
                 if let KeyValueItem::List(l) = v {
                     let stop = stop.min(l.len() as _);
@@ -72,7 +72,7 @@ impl KeyValueStore {
         )
     }
 
-    pub fn lpush(&mut self, key: &str, value: String) -> Result<i32, Box<dyn Error>> {
+    pub fn lpush(&mut self, key: &str, value: Vec<u8>) -> Result<i32, Box<dyn Error>> {
         let mut len = 1;
         self.items
             .entry(key.to_string())
@@ -89,7 +89,7 @@ impl KeyValueStore {
         Ok(len as _)
     }
 
-    pub fn set(&mut self, key: &str, value: String) -> Result<(), Box<dyn Error>> {
+    pub fn set(&mut self, key: &str, value: Vec<u8>) -> Result<(), Box<dyn Error>> {
         self.items
             .entry(key.to_string())
             .and_modify(|v| {
@@ -101,14 +101,14 @@ impl KeyValueStore {
         Ok(())
     }
 
-    pub fn lrem(&mut self, key: &str, value: String) -> Result<i32, Box<dyn Error>> {
+    pub fn lrem(&mut self, key: &str, value: Vec<u8>) -> Result<i32, Box<dyn Error>> {
         let mut len: i32 = 0;
         self.items.entry(key.to_string()).and_modify(|v| {
             if let KeyValueItem::List(ref l) = v {
-                let list: Vec<String> = l
+                let list: Vec<Vec<u8>> = l
                     .iter()
                     .filter(|i| **i != value)
-                    .map(|v| v.into())
+                    .map(|v| v.clone())
                     .collect();
                 len = list.len() as _;
                 *v = KeyValueItem::List(list);
@@ -117,7 +117,7 @@ impl KeyValueStore {
         Ok(len)
     }
 
-    pub fn sadd(&mut self, key: &str, value: String) -> Result<i32, Box<dyn Error>> {
+    pub fn sadd(&mut self, key: &str, value: Vec<u8>) -> Result<i32, Box<dyn Error>> {
         let mut len: i32 = 1;
         self.items
             .entry(key.to_string())
@@ -131,7 +131,7 @@ impl KeyValueStore {
         Ok(len)
     }
 
-    pub fn srem(&mut self, key: &str, value: String) -> Result<i32, Box<dyn Error>> {
+    pub fn srem(&mut self, key: &str, value: Vec<u8>) -> Result<i32, Box<dyn Error>> {
         let mut len: i32 = 0;
         self.items
             .entry(key.to_string())
@@ -145,7 +145,7 @@ impl KeyValueStore {
         Ok(len)
     }
 
-    pub fn sunion(&self, keys: Vec<String>) -> Result<Vec<String>, Box<dyn Error>> {
+    pub fn sunion(&self, keys: Vec<String>) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
         let union = self
             .items
             .iter()
@@ -165,8 +165,8 @@ impl KeyValueStore {
         Ok(union.iter().cloned().collect())
     }
 
-    pub fn sinter(&self, keys: Vec<String>) -> Result<Vec<String>, Box<dyn Error>> {
-        let sets: Vec<HashSet<String>> = self
+    pub fn sinter(&self, keys: Vec<String>) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
+        let sets: Vec<HashSet<Vec<u8>>> = self
             .items
             .iter()
             .filter_map(|(k, v)| {
@@ -188,7 +188,7 @@ impl KeyValueStore {
         Ok(inter.cloned().collect())
     }
 
-    pub fn smembers(&self, key: String) -> Result<Vec<String>, Box<dyn Error>> {
+    pub fn smembers(&self, key: String) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
         self.items.get(&key).map_or_else(
             || Ok(vec![]),
             |v| {
@@ -202,7 +202,7 @@ impl KeyValueStore {
     }
 }
 
-fn new_set(value: String) -> KeyValueItem {
+fn new_set(value: Vec<u8>) -> KeyValueItem {
     let mut x = HashSet::new();
     x.insert(value);
     KeyValueItem::Set(x)
@@ -214,19 +214,19 @@ mod test {
 
     fn gen_store() -> KeyValueStore {
         let mut store = KeyValueStore::new();
-        store.sadd("test", "bob".to_string()).unwrap();
-        store.sadd("test", "alice".to_string()).unwrap();
-        store.sadd("test", "dave".to_string()).unwrap();
-        store.sadd("test2", "bob".to_string()).unwrap();
-        store.sadd("test2", "dave".to_string()).unwrap();
+        store.sadd("test", "bob".to_owned().into_bytes()).unwrap();
+        store.sadd("test", "alice".to_owned().into_bytes()).unwrap();
+        store.sadd("test", "dave".to_owned().into_bytes()).unwrap();
+        store.sadd("test2", "bob".to_owned().into_bytes()).unwrap();
+        store.sadd("test2", "dave".to_owned().into_bytes()).unwrap();
 
-        store.lpush("list1", "first".to_string()).unwrap();
-        store.lpush("list1", "second".to_string()).unwrap();
-        store.lpush("list1", "third".to_string()).unwrap();
+        store.lpush("list1", "first".to_owned().into_bytes()).unwrap();
+        store.lpush("list1", "second".to_owned().into_bytes()).unwrap();
+        store.lpush("list1", "third".to_owned().into_bytes()).unwrap();
 
         store.incr("counter", 5).unwrap();
 
-        store.set("setkey", "setval".to_string()).unwrap();
+        store.set("setkey", "setval".to_owned().into_bytes()).unwrap();
         store
     }
 
@@ -237,9 +237,9 @@ mod test {
         let inter = store
             .sinter(vec!["test".to_string(), "test2".to_string()])
             .unwrap();
-        assert!(inter.contains(&String::from("bob")));
-        assert!(inter.contains(&String::from("dave")));
-        assert_eq!(false, inter.contains(&String::from("alice")));
+        assert!(inter.contains(&"bob".to_owned().into_bytes()));
+        assert!(inter.contains(&"dave".to_owned().into_bytes()));
+        assert_eq!(false, inter.contains(&"alice".to_owned().into_bytes()));
     }
 
     #[test]
@@ -256,14 +256,14 @@ mod test {
     fn test_get_set() {
         let store = gen_store();
 
-        assert_eq!("setval".to_string(), store.get("setkey").unwrap());
+        assert_eq!("setval".to_owned().into_bytes(), store.get("setkey").unwrap());
     }
 
     #[test]
     fn test_list() {
         let store = gen_store();
         assert_eq!(
-            vec!["first", "second", "third"],
+            vec!["first".to_owned().into_bytes(), "second".to_owned().into_bytes(), "third".to_owned().into_bytes()],
             store.lrange("list1", 0, 100).unwrap()
         );
     }
@@ -285,11 +285,11 @@ mod test {
     fn test_exists_and_del() {
         let mut store = gen_store();
 
-        store.set("thenumber", "42".to_string()).unwrap();
+        store.set("thenumber", "42".to_owned().into_bytes());
         assert!(store.exists("thenumber").unwrap());
         store.del("thenumber").unwrap();
         assert_eq!(false, store.exists("thenumber").unwrap());
-        store.set("thenumber", "41".to_string()).unwrap();
+        store.set("thenumber", "41".to_owned().into_bytes());
         assert!(store.exists("thenumber").unwrap());
     }
 }
