@@ -1,5 +1,5 @@
 [package]
-name = "tea-keyvalue"
+name = "tea-keyvalue-provider"
 version = "0.2.1"
 authors = ["Kevin Zhang <kevin.zhang.canada@gmail.com>"]
 edition = "2018"
