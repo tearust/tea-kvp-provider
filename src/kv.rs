@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
+use key_vec::KeyVec;
 use std::error::Error;
 use std::result::Result;
 
@@ -8,6 +9,7 @@ pub enum KeyValueItem {
     Scalar(Vec<u8>),
     List(Vec<Vec<u8>>),
     Set(HashSet<Vec<u8>>),
+    SortedVec(KeyVec<i32, Vec<u8>>),
 }
 
 pub struct KeyValueStore {
@@ -89,6 +91,38 @@ impl KeyValueStore {
         Ok(len as _)
     }
 
+    pub fn sv_insert(&mut self, key:&str, value: &(i32, Vec<u8>))-> Result<i32, Box<dyn Error>> {
+        let mut len = 1;
+        self.items
+            .entry(key.to_string())
+            .and_modify(|v| {
+                if let KeyValueItem::SortedVec(ref mut kvec) = v {
+                    kvec.insert(value.0, value.1.clone());
+                    len = kvec.len();
+                    //*v = KeyValueItem::SortedVec(kvec); 
+                }
+            })
+            .or_insert_with(|| {
+                let mut kvec = KeyVec::new();
+                kvec.insert(value.0, value.1.clone());
+                KeyValueItem::SortedVec(kvec)
+            });
+        Ok(len as _)
+    }
+
+    pub fn sv_into_vec(&mut self, key: &str) -> Result<Vec<(i32, Vec<u8>)>, Box<dyn Error>> {
+        match self.items.get(key){
+            None=>Ok(Vec::new()),
+            Some(v)=>{
+                if let KeyValueItem::SortedVec(ref kvec) = v {
+                    Ok(kvec.clone().into_vec())
+                }
+                else{
+                    Ok(Vec::new())
+                }
+            }
+        }
+    }
     pub fn set(&mut self, key: &str, value: Vec<u8>) -> Result<(), Box<dyn Error>> {
         self.items
             .entry(key.to_string())
@@ -227,6 +261,7 @@ mod test {
         store.incr("counter", 5).unwrap();
 
         store.set("setkey", "setval".to_owned().into_bytes()).unwrap();
+
         store
     }
 
@@ -291,5 +326,23 @@ mod test {
         assert_eq!(false, store.exists("thenumber").unwrap());
         store.set("thenumber", "41".to_owned().into_bytes());
         assert!(store.exists("thenumber").unwrap());
+    }
+    #[test]
+    fn test_sv_insert(){
+        let mut store = gen_store();
+        let tup0 = (0, "zero".to_owned().into_bytes());
+        let tup1 = (1, "one".to_owned().into_bytes());
+        let tup3 = (3, "three".to_owned().into_bytes());
+        store.sv_insert("sorted", &tup1);
+        store.sv_insert("sorted", &tup0);
+        store.sv_insert("sorted", &tup3);
+        let r = store.sv_into_vec("sorted").unwrap();
+        assert_eq!(r, vec![tup0.clone(),tup1.clone(),tup3.clone()]);
+        let tup2 =(2, "two".to_owned().into_bytes()); 
+        store.sv_insert("sorted", &tup2);
+        let r = store.sv_into_vec("sorted").unwrap();
+        assert_eq!(r, vec![tup0,tup1,tup2,tup3]);
+
+
     }
 }
