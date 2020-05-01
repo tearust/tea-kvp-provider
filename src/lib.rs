@@ -173,9 +173,9 @@ impl KeyvalueProvider {
     }
     fn sv_insert(&self, _actor:&str, req: KeyVecInsertQuery) -> Result<Vec<u8>, Box<dyn Error>>{
         let mut store = self.store.write().unwrap();
-        let result: usize = store.sv_insert(&req.key, &req.value)?;
+        let result: bool = store.sv_insert(&req.key, &req.value, req.overwrite)?;
         Ok(serialize(KeyVecInsertResponse {
-           len:result,
+           success:result,
         })?)
     }
 

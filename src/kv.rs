@@ -91,23 +91,34 @@ impl KeyValueStore {
         Ok(len as _)
     }
 
-    pub fn sv_insert(&mut self, key:&str, value: &(i32, Vec<u8>))-> Result<usize, Box<dyn Error>> {
-        let mut len = 1;
+    pub fn sv_insert(&mut self, key:&str, value: &(i32, Vec<u8>), overwrite: bool)-> Result<bool, Box<dyn Error>> {
+        let mut result = false;
         self.items
             .entry(key.to_string())
             .and_modify(|v| {
                 if let KeyValueItem::SortedVec(ref mut kvec) = v {
-                    kvec.insert(value.0, value.1.clone());
-                    len = kvec.len();
-                    //*v = KeyValueItem::SortedVec(kvec); 
+                    if let Some(_current_existing_value) = kvec.get(&value.0){
+                        if overwrite {
+                            kvec.insert(value.0, value.1.clone()); 
+                            result = true;
+                        }
+                        else{
+                            result = false;
+                        }
+                    }
+                    else{
+                        kvec.insert(value.0, value.1.clone());
+                        result = true;
+                    }
                 }
             })
             .or_insert_with(|| {
                 let mut kvec = KeyVec::new();
                 kvec.insert(value.0, value.1.clone());
+                result = true;
                 KeyValueItem::SortedVec(kvec)
             });
-        Ok(len as _)
+        Ok(result)
     }
 
     pub fn sv_into_vec(&self, key: &str) -> Result<Vec<(i32, Vec<u8>)>, Box<dyn Error>> {
@@ -360,13 +371,13 @@ mod test {
         let tup0 = (0, "zero".to_owned().into_bytes());
         let tup1 = (1, "one".to_owned().into_bytes());
         let tup3 = (3, "three".to_owned().into_bytes());
-        store.sv_insert("sorted", &tup1);
-        store.sv_insert("sorted", &tup0);
-        store.sv_insert("sorted", &tup3);
+        store.sv_insert("sorted", &tup1, false);
+        store.sv_insert("sorted", &tup0, false);
+        store.sv_insert("sorted", &tup3, false);
         let r = store.sv_into_vec("sorted").unwrap();
         assert_eq!(r, vec![tup0.clone(),tup1.clone(),tup3.clone()]);
         let tup2 =(2, "two".to_owned().into_bytes()); 
-        store.sv_insert("sorted", &tup2);
+        store.sv_insert("sorted", &tup2, false);
         let r = store.sv_into_vec("sorted").unwrap();
         assert_eq!(r, vec![tup0.clone(),tup1.clone(),tup2.clone(),tup3.clone()]);
         store.sv_tail_off("sorted", 2);
