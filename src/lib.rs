@@ -171,6 +171,28 @@ impl KeyvalueProvider {
             exists: result,
         })?)
     }
+    fn sv_insert(&self, _actor:&str, req: KeyVecInsertQuery) -> Result<Vec<u8>, Box<dyn Error>>{
+        let mut store = self.store.write().unwrap();
+        let result: usize = store.sv_insert(&req.key, &req.value)?;
+        Ok(serialize(KeyVecInsertResponse {
+           len:result,
+        })?)
+    }
+
+    fn sv_get(&self, _actor:&str, req: KeyVecGetQuery) -> Result<Vec<u8>, Box<dyn Error>>{
+        let store = self.store.read().unwrap();
+        let result: Vec<(i32, Vec<u8>)> = store.sv_into_vec(&req.key)?;
+        Ok(serialize(KeyVecGetResponse {
+            values: result,
+        })?)
+    }
+    fn sv_tail_off(&self, _actor:&str, req: KeyVecTailOffQuery) -> Result<Vec<u8>, Box<dyn Error>>{
+        let mut store = self.store.write().unwrap();
+        let result: usize = store.sv_tail_off(&req.key, req.remain)?;
+        Ok(serialize(KeyVecTailOffResponse {
+           len:result,
+        })?)
+    }
 }
 
 impl CapabilityProvider for KeyvalueProvider {
@@ -214,6 +236,9 @@ impl CapabilityProvider for KeyvalueProvider {
             keyvalue::OP_SET_INTERSECT => self.set_intersect(actor, deserialize(msg)?),
             keyvalue::OP_SET_QUERY => self.set_query(actor, deserialize(msg)?),
             keyvalue::OP_KEY_EXISTS => self.exists(actor, deserialize(msg)?),
+            keyvalue::OP_KEYVEC_INSERT => self.sv_insert(actor, deserialize(msg)?),
+            keyvalue::OP_KEYVEC_GET => self.sv_get(actor, deserialize(msg)?),
+            keyvalue::OP_KEYVEC_TAILOFF =>self.sv_tail_off(actor, deserialize(msg)?),
             _ => Err("bad dispatch".into()),
         }
     }

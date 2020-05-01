@@ -91,7 +91,7 @@ impl KeyValueStore {
         Ok(len as _)
     }
 
-    pub fn sv_insert(&mut self, key:&str, value: &(i32, Vec<u8>))-> Result<i32, Box<dyn Error>> {
+    pub fn sv_insert(&mut self, key:&str, value: &(i32, Vec<u8>))-> Result<usize, Box<dyn Error>> {
         let mut len = 1;
         self.items
             .entry(key.to_string())
@@ -110,7 +110,7 @@ impl KeyValueStore {
         Ok(len as _)
     }
 
-    pub fn sv_into_vec(&mut self, key: &str) -> Result<Vec<(i32, Vec<u8>)>, Box<dyn Error>> {
+    pub fn sv_into_vec(&self, key: &str) -> Result<Vec<(i32, Vec<u8>)>, Box<dyn Error>> {
         match self.items.get(key){
             None=>Ok(Vec::new()),
             Some(v)=>{
@@ -118,10 +118,37 @@ impl KeyValueStore {
                     Ok(kvec.clone().into_vec())
                 }
                 else{
-                    Ok(Vec::new())
+                    return Err("Attemp to call to a non Sorted Vec".into());
                 }
             }
         }
+    }
+
+    pub fn sv_tail_off(&mut self, key: &str, remain: usize) -> Result<usize, Box<dyn Error>>{
+        let mut len = 0;
+        self.items.entry(key.to_string()).and_modify(|v| {
+            if let KeyValueItem::SortedVec(ref mut kvec) = v {
+                len = kvec.len();
+                println!("kvec len remain: {},{}", len, remain);
+                if len > remain{
+                
+                    let mut i: usize = len;
+                    loop{
+                        if i == remain {
+                            break;
+                        }
+                        println!("inside loop: kvec len and i: {},{}", len, i); 
+                        kvec.remove_index(i - 1);
+                        i = i - 1;
+                    }
+                    
+                }
+                len = kvec.len();
+            }
+            
+        });
+        
+        Ok(len)
     }
     pub fn set(&mut self, key: &str, value: Vec<u8>) -> Result<(), Box<dyn Error>> {
         self.items
@@ -328,7 +355,7 @@ mod test {
         assert!(store.exists("thenumber").unwrap());
     }
     #[test]
-    fn test_sv_insert(){
+    fn test_sorted_vec(){
         let mut store = gen_store();
         let tup0 = (0, "zero".to_owned().into_bytes());
         let tup1 = (1, "one".to_owned().into_bytes());
@@ -341,8 +368,9 @@ mod test {
         let tup2 =(2, "two".to_owned().into_bytes()); 
         store.sv_insert("sorted", &tup2);
         let r = store.sv_into_vec("sorted").unwrap();
-        assert_eq!(r, vec![tup0,tup1,tup2,tup3]);
-
-
+        assert_eq!(r, vec![tup0.clone(),tup1.clone(),tup2.clone(),tup3.clone()]);
+        store.sv_tail_off("sorted", 2);
+        let r = store.sv_into_vec("sorted").unwrap();
+        assert_eq!(r, vec![tup0.clone(),tup1.clone()]);
     }
 }
