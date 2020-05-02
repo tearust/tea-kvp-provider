@@ -7,7 +7,8 @@
 //! - New added Sorted Vec type. It will sort tuple values by the first element when insert.
 //!  
 
-//! About the Tea Project
+//! 
+//! # About the Tea Project
 //! 
 //! Tea Project (Trusted Execution & Attestation) is a Wasm runtime build on top of RoT(Root of Trust)
 //! from both trusted hardware environment and blockchain technologies. Developer, Host and Consumer 
@@ -18,11 +19,16 @@
 //! infrastructure to be more secure and trustless.
 //! 
 //! Introduction [blog post](https://medium.com/@pushbar/0-of-n-cover-letter-of-the-trusted-webassembly-runtime-on-ipfs-12a4fd8c4338) 
+//! 
 //! Project [repo](http://github.com/tearust). More and more repo will be exposed soon. 
+//! 
 //! Yet to come //! project site [( not completed yet) http://www.t-rust.com/](http://www.t-rust.com/) 
+//! 
 //! Contact: kevin.zhang.canada_at_gmail_dot_com. 
+//! 
 //! We are just started, all kinds of help are welcome! 
 //! 
+
 
 #[macro_use]
 extern crate wascc_codec as codec;
