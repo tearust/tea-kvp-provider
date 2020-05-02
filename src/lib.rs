@@ -1,3 +1,22 @@
+//! tea-kvp-provider
+//!
+//! This WASCC provider is an enhanced version of Kevin Hoffman's original 
+//! [Key-Value Pair Provider example](https://github.com/wascc/examples/tree/master/keyvalue-provider)
+//!  with the following enhancedments:
+//! - Values are stored in Vec<u8> instead of String
+//! - New added Sorted Vec type. It will sort tuple values by the first element when insert.
+//!  
+
+//! About the Tea Project
+//! 
+//! Tea Project (Trusted Execution & Attestation) is a Wasm runtime build on top of RoT(Root of Trust)
+//! from both trusted hardware environment and blockchain technologies. Developer, Host and Consumer 
+//! do not have to trust any others to not only protecting privacy but also preventing cyber attacks. 
+//! The execution environment under remoted attestation can be verified by blockchain consensys. 
+//! Crypto economy is used as motivation that hosts are willing run trusted computing nodes. This 
+//! platform can be used by CDN providers, IPFS Nodes or existing cloud providers to enhance existing 
+//! infrastructure to be more secure and trustless. 
+ 
 #[macro_use]
 extern crate wascc_codec as codec;
 

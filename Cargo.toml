@@ -1,9 +1,12 @@
 [package]
 name = "tea-keyvalue-provider"
-version = "0.2.1"
+version = "0.1.0"
 authors = ["Kevin Zhang <kevin.zhang.canada@gmail.com>"]
 edition = "2018"
-
+license = "Apache-2.0"
+readme = "README.md"
+keywords = ["webassembly", "wasm", "codec", "tea", "key value pair", "wascc"]
+categories = ["wasm", "data-structures","encoding"]
 [lib]
 crate-type = ["cdylib", "rlib"]
 
@@ -16,4 +19,4 @@ wascc-codec = "0.6.0"
 log = "0.4.8"
 env_logger = "0.7.1"
 key-vec = "0.2.4"
-tea-codec = { path = "../tea-codec"}
+tea-codec = "0.1.0"
