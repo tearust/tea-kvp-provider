@@ -5,7 +5,7 @@ authors = ["Kevin Zhang <kevin.zhang.canada@gmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
 readme = "README.md"
-keywords = ["webassembly", "wasm", "codec", "tea", "key value pair", "wascc"]
+keywords = ["webassembly", "wasm", "codec", "tea", "key_value_pair", "wascc"]
 categories = ["wasm", "data-structures","encoding"]
 [lib]
 crate-type = ["cdylib", "rlib"]
