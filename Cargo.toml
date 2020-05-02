@@ -3,6 +3,7 @@ name = "tea-keyvalue-provider"
 version = "0.1.0"
 authors = ["Kevin Zhang <kevin.zhang.canada@gmail.com>"]
 edition = "2018"
+description = "Key Value Pair Storage Provider for WaSCC. Part of TeaRust Project"
 license = "Apache-2.0"
 readme = "README.md"
 keywords = ["webassembly", "wasm", "tea", "key_value_pair", "wascc"]
