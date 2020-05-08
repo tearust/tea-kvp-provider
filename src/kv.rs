@@ -161,6 +161,20 @@ impl KeyValueStore {
         
         Ok(len)
     }
+
+    pub fn sv_remove_item(&mut self, key: &str, value: (i32, Vec<u8>))-> Result<bool, Box<dyn Error>>{
+        self.items
+            .entry(key.to_string())
+            .and_modify(|v| {
+                if let KeyValueItem::SortedVec(ref mut kvec) = v {
+                    if let Some(_current_existing_value) = kvec.get(&value.0){
+                        kvec.remove(&value.0);
+                    }
+                }
+            });
+        Ok(true)
+    }
+
     pub fn set(&mut self, key: &str, value: Vec<u8>) -> Result<(), Box<dyn Error>> {
         self.items
             .entry(key.to_string())

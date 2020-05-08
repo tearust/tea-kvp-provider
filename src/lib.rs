@@ -225,6 +225,13 @@ impl KeyvalueProvider {
            len:result,
         })?)
     }
+    fn sv_remove_item(&self, _actor:&str, req: KeyVecRemoveItemQuery)-> Result<Vec<u8>, Box<dyn Error>>{
+        let mut store = self.store.write().unwrap();
+        let result: bool = store.sv_remove_item(&req.key, req.value)?;
+        Ok(serialize(KeyVecRemoveItemResponse {
+           success: result,
+        })?) 
+    }
 }
 
 impl CapabilityProvider for KeyvalueProvider {
@@ -271,6 +278,7 @@ impl CapabilityProvider for KeyvalueProvider {
             keyvalue::OP_KEYVEC_INSERT => self.sv_insert(actor, deserialize(msg)?),
             keyvalue::OP_KEYVEC_GET => self.sv_get(actor, deserialize(msg)?),
             keyvalue::OP_KEYVEC_TAILOFF =>self.sv_tail_off(actor, deserialize(msg)?),
+            keyvalue::OP_KEYVEC_REMOVE_ITEM =>self.sv_remove_item(actor, deserialize(msg)?),
             _ => Err("bad dispatch".into()),
         }
     }
